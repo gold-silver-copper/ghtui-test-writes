@@ -1,0 +1,9 @@
+name: ci
+on: pull_request
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - run: |
+          echo "branch ${{ github.head_ref }}"
+          case "${{ github.head_ref }}" in *fail*) echo "##[error]failing on purpose"; exit 1;; esac

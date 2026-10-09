@@ -1,0 +1,17 @@
+name: botpr
+on: workflow_dispatch
+permissions:
+  contents: write
+  pull-requests: write
+jobs:
+  pr:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          git config user.name bot; git config user.email bot@example.com
+          b=bot-$(date +%s); git checkout -b $b
+          echo "bot change $b" > bot-$b.txt; git add .; git commit -m "Bot change $b"; git push origin $b
+          gh pr create --title "Bot PR $b" --body "Opened by the workflow so it can be approved" --head $b --base main
