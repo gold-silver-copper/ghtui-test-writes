@@ -1,4 +1,4 @@
-line 1
+line ONE from branch
 line 2
 line 3
 line 4
