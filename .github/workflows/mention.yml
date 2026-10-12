@@ -1,5 +1,10 @@
 name: mention
-on: workflow_dispatch
+on:
+  workflow_dispatch:
+    inputs:
+      issue:
+        description: The issue to mention the owner on (a new one makes a new, unread thread)
+        default: "8"
 permissions:
   issues: write
 jobs:
@@ -9,4 +14,5 @@ jobs:
       - env:
           GH_TOKEN: ${{ github.token }}
           GH_REPO: ${{ github.repository }}
-        run: gh issue comment 8 --body "@gold-silver-copper a notification for ghtui's inbox check ($(date +%s))"
+          ISSUE: ${{ inputs.issue || '8' }}
+        run: gh issue comment "$ISSUE" --body "@gold-silver-copper a notification for ghtui's inbox check ($(date +%s))"
