@@ -1,0 +1,14 @@
+name: botreview
+on: workflow_dispatch
+permissions:
+  pull-requests: write
+jobs:
+  comment:
+    runs-on: ubuntu-latest
+    steps:
+      - env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+        run: |
+          sha=$(gh api repos/$GH_REPO/pulls/11 --jq .head.sha)
+          gh api repos/$GH_REPO/pulls/11/comments -f body="A review comment from the bot ($(date +%s))" -f commit_id=$sha -f path=bot-bot-1791523358.txt -F line=2 -f side=RIGHT --jq .id
