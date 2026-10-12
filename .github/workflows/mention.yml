@@ -1,0 +1,12 @@
+name: mention
+on: workflow_dispatch
+permissions:
+  issues: write
+jobs:
+  mention:
+    runs-on: ubuntu-latest
+    steps:
+      - env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+        run: gh issue comment 8 --body "@gold-silver-copper a notification for ghtui's inbox check ($(date +%s))"
