@@ -1,5 +1,21 @@
 name: botreview
-on: workflow_dispatch
+on:
+  workflow_dispatch:
+    inputs:
+      pr:
+        description: The pull request to review
+        default: "11"
+      review:
+        description: none leaves one review comment; the others submit a review with a summary and an inline comment
+        type: choice
+        options: [none, COMMENT, REQUEST_CHANGES, APPROVE]
+        default: none
+      path:
+        description: The file the comment is on
+        default: bot-bot-1791523358.txt
+      line:
+        description: The line the comment is on
+        default: "2"
 permissions:
   pull-requests: write
 jobs:
@@ -9,6 +25,18 @@ jobs:
       - env:
           GH_TOKEN: ${{ github.token }}
           GH_REPO: ${{ github.repository }}
+          PR: ${{ inputs.pr || '11' }}
+          REVIEW: ${{ inputs.review || 'none' }}
+          FILE: ${{ inputs.path || 'bot-bot-1791523358.txt' }}
+          LINE: ${{ inputs.line || '2' }}
         run: |
-          sha=$(gh api repos/$GH_REPO/pulls/11 --jq .head.sha)
-          gh api repos/$GH_REPO/pulls/11/comments -f body="A review comment from the bot ($(date +%s))" -f commit_id=$sha -f path=bot-bot-1791523358.txt -F line=2 -f side=RIGHT --jq .id
+          sha=$(gh api repos/$GH_REPO/pulls/$PR --jq .head.sha)
+          now=$(date +%s)
+          if [ "$REVIEW" = none ]; then
+            gh api repos/$GH_REPO/pulls/$PR/comments -f body="A review comment from the bot ($now)" -f commit_id=$sha -f path="$FILE" -F line="$LINE" -f side=RIGHT --jq .id
+          else
+            jq -n --arg sha "$sha" --arg event "$REVIEW" --arg path "$FILE" --argjson line "$LINE" --arg now "$now" \
+              '{commit_id: $sha, event: $event, body: ("A review from the bot (" + $now + ")"),
+                comments: [{path: $path, line: $line, side: "RIGHT", body: ("An inline comment in the bot'"'"'s review (" + $now + ")")}]}' \
+              | gh api repos/$GH_REPO/pulls/$PR/reviews --input - --jq .id
+          fi
