@@ -1,0 +1,48 @@
+name: actions
+on:
+  workflow_dispatch:
+    inputs:
+      outcome:
+        description: How the job ends
+        type: choice
+        options: [fail, pass]
+        default: fail
+      seconds:
+        description: How long the job writes its log, in seconds
+        type: string
+        default: "60"
+      summary:
+        description: Write a job summary
+        type: boolean
+        default: true
+jobs:
+  slow:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Write the log slowly
+        env:
+          SECONDS_: ${{ inputs.seconds }}
+        run: |
+          for i in $(seq 1 "$SECONDS_"); do echo "line $i of $SECONDS_"; sleep 1; done
+      - name: Write a summary
+        if: inputs.summary
+        env:
+          OUTCOME: ${{ inputs.outcome }}
+        run: |
+          echo "## Summary from ghtui's test" >> "$GITHUB_STEP_SUMMARY"
+          echo "" >> "$GITHUB_STEP_SUMMARY"
+          echo "- outcome: **$OUTCOME**" >> "$GITHUB_STEP_SUMMARY"
+          echo "- a [link](https://github.com/gold-silver-copper/ghtui-test-writes)" >> "$GITHUB_STEP_SUMMARY"
+      - name: Make an artifact
+        run: echo "an artifact for ghtui" > artifact.txt
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ghtui-artifact
+          path: artifact.txt
+          retention-days: 1
+      - name: Fail with an annotation
+        if: inputs.outcome == 'fail'
+        run: |
+          echo "::warning file=file.txt,line=1::a warning for ghtui"
+          echo "::error file=README.md,line=1,title=ghtui test::failing on purpose"
+          exit 1
